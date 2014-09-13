@@ -29,7 +29,7 @@ public  class puzzleSolver {
             return;
         }
 
-        // pupulate the root node with puzzle
+        // populate the root node with puzzle
         node root = new node();
         root.move = "Start";
         for (int i =0; i < 4; i++) {
