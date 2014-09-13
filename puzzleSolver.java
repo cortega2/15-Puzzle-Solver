@@ -42,23 +42,26 @@ public  class puzzleSolver {
             }
         }
 
-        System.out.println("BFS is working please wait...");
-        node sol = breadthFind(root);
-        if(sol != null){
-            System.out.println("BFS found it!");
-            printSolution(sol, true);
-        }
-        else
+        System.out.println("BFS is working please wait..."); 
+        try{
+            node sol = breadthFind(root);
+            if(sol != null){
+                System.out.println("BFS found it!");
+                printSolution(sol, true);
+            }
+        }catch(OutOfMemoryError e){
             System.out.println("Can't find solution- BFS ran out of memory :(");
-        
+        }     
         System.out.println("---------------------------------------------\nIDDFS is working please wait...");
-        sol = iterDepthFind(root);
-        if(sol != null){
-            System.out.println("IDDFS found it!");
-            printSolution(sol, true);
-        }
-        else
+        try{
+            node sol = iterDepthFind(root);
+            if(sol != null){
+                System.out.println("IDDFS found it!");
+                printSolution(sol, true);
+            }
+        }catch(OutOfMemoryError e){
             System.out.println("Can't find solution- IDDFS ran out of memory :(");
+        }
 
     }
     // A method that uses breadth first search to find a solution
@@ -87,6 +90,7 @@ public  class puzzleSolver {
                     queue.add(cur.down);
             }
         }
+        // should never happen unless puzzle is not valid
         return null;
     }
 
@@ -121,6 +125,7 @@ public  class puzzleSolver {
             }
             depthLevel++;
         }
+        // should never happen unless puzzle is not valid
         return null;
     }
 
