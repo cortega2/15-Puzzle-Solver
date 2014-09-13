@@ -41,7 +41,8 @@ This is the solution:
 1 2 3 4 5 6 7 8 9 10 11 12 13 0 14 15   Down  
 1 2 3 4 5 6 7 8 9 10 11 12 13 14 0 15   Right  
 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0   Right  
----------------------------------------------  
+
+  
 IDDFS is working please wait...  
 IDDFS found it!  
 This is the solution:  
