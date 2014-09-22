@@ -1,4 +1,5 @@
 // This is a program that will solve a 15X15 slide puzzle
+// Author: Carlos Ortega for UIC CS411 class
 import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -18,6 +19,15 @@ public  class puzzleSolver {
         node right = null;
     }
 
+    private static class solutionData {
+        int expandedNodes = 0;
+        node solutionNode = null;
+        long memoryUsed;
+        long totalTime;
+        String path = "";
+        String startingBoard = "";
+    }
+
     public static void main(String [] args){
         // Error check
          if(args.length <= 0){
@@ -29,56 +39,255 @@ public  class puzzleSolver {
             return;
         }
 
-        // populate the root node with puzzle
-        node root = new node();
-        root.move = "Start";
-        for (int i =0; i < 4; i++) {
-            for (int q = 0; q < 4; q++) {
-                root.state[i][q] = Integer.parseInt(args[4*i + q]);
-                if(root.state[i][q] == 0){
-                        root.blankRow = i;
-                        root.blankCol = q;
+
+        System.gc();
+        System.out.println("\nBFS:"); 
+        try{
+            // populate the root node with puzzle
+            String board = "";
+            node root = new node();
+            root.move = "Start";
+            for (int i =0; i < 4; i++) {
+                for (int q = 0; q < 4; q++) {
+                    root.state[i][q] = Integer.parseInt(args[4*i + q]);
+                    board = board + root.state[i][q] +" ";
+                    if(root.state[i][q] == 0){
+                            root.blankRow = i;
+                            root.blankCol = q;
+                    }
                 }
             }
-        }
 
-        System.out.println("BFS is working please wait..."); 
-        try{
-            node sol = breadthFind(root);
-            if(sol != null){
-                System.out.println("BFS found it!");
-                printSolution(sol, true);
-            }
+            solutionData breadthSolution = breadthFind(root, board);
+            
+            if(breadthSolution != null)
+                printSolutionData(breadthSolution);
+            else
+                System.out.println("Can't find solution- A*h1 ran out of memory :(");
+
         }catch(OutOfMemoryError e){
             System.out.println("Can't find solution- BFS ran out of memory :(");
-        }     
-        System.out.println("---------------------------------------------\nIDDFS is working please wait...");
+        }
+
+        System.gc();
+        System.out.println("\nIDDFS:");
         try{
-            node sol = iterDepthFind(root);
-            if(sol != null){
-                System.out.println("IDDFS found it!");
-                printSolution(sol, true);
+            // populate the root node with puzzle
+            String board = "";
+            node root = new node();
+            root.move = "Start";
+            for (int i =0; i < 4; i++) {
+                for (int q = 0; q < 4; q++) {
+                    root.state[i][q] = Integer.parseInt(args[4*i + q]);
+                    board = board + root.state[i][q] +" ";
+                    if(root.state[i][q] == 0){
+                            root.blankRow = i;
+                            root.blankCol = q;
+                    }
+                }
             }
+
+            solutionData solution = iterDepthFind(root, board);
+            
+            if(solution != null)
+                printSolutionData(solution);
+            else
+                System.out.println("Can't find solution- A*h1 ran out of memory :(");
+
         }catch(OutOfMemoryError e){
             System.out.println("Can't find solution- IDDFS ran out of memory :(");
         }
 
+        System.gc();
+        System.out.println("\nA*h1:");
+        try{
+            // populate the root node with puzzle
+            String board = "";
+            node root = new node();
+            root.move = "Start";
+            for (int i =0; i < 4; i++) {
+                for (int q = 0; q < 4; q++) {
+                    root.state[i][q] = Integer.parseInt(args[4*i + q]);
+                    board = board + root.state[i][q] +" ";
+                    if(root.state[i][q] == 0){
+                            root.blankRow = i;
+                            root.blankCol = q;
+                    }
+                }
+            }
+
+            solutionData solution = aStarH1(root, board);
+            
+            if(solution != null)
+                printSolutionData(solution);
+            else
+                System.out.println("Can't find solution- A*h1 ran out of memory :(");
+
+        }catch(OutOfMemoryError e){
+            System.out.println("Can't find solution- A*h1 ran out of memory :(");
+        }
+
+        System.gc();
+        System.out.println("\nA*h2:");
+        try{
+            // populate the root node with puzzle
+            String board = "";
+            node root = new node();
+            root.move = "Start";
+            for (int i =0; i < 4; i++) {
+                for (int q = 0; q < 4; q++) {
+                    root.state[i][q] = Integer.parseInt(args[4*i + q]);
+                    board = board + root.state[i][q] +" ";
+                    if(root.state[i][q] == 0){
+                            root.blankRow = i;
+                            root.blankCol = q;
+                    }
+                }
+            }
+
+            solutionData solution = aStarH2(root, board);
+            
+            if(solution != null)
+                printSolutionData(solution);
+            else
+                System.out.println("Can't find solution- A*h2 ran out of memory :(");
+
+        }catch(OutOfMemoryError e){
+            System.out.println("Can't find solution- A*h2 ran out of memory :(");
+        }
     }
+
+    // solution using the second heuristic. This method calls getDistanceSum()
+    public static solutionData aStarH2(node root, String board){
+        ArrayList<node> unexpandedNodes = new ArrayList<node>();
+        unexpandedNodes.add(root);
+
+        solutionData breadthSolution = new solutionData();
+        int expandedNodes = 0;
+        long startTime = System.currentTimeMillis();
+
+        node cur = null;
+        while(expandedNodes < Integer.MAX_VALUE){
+            // get node with lowest f(n) = g(n) + h(n) result
+            int minVal = Integer.MAX_VALUE;
+            for (int i = 0; i < unexpandedNodes.size() ; i++) {
+                node tmp = unexpandedNodes.get(i);
+                if(getDistanceSum(tmp) + tmp.level < minVal){
+                    minVal = getDistanceSum(tmp) + tmp.level;
+                    cur = tmp;
+                }
+            }
+            unexpandedNodes.remove(cur);
+
+            if (getDistanceSum(cur) == 0){
+                breadthSolution.expandedNodes = expandedNodes;
+                breadthSolution.solutionNode = cur;
+                breadthSolution.startingBoard = board;
+                breadthSolution.path = getPath(cur);
+
+                Runtime runtime = Runtime.getRuntime();
+                breadthSolution.memoryUsed = (runtime.totalMemory() - runtime.freeMemory())/(1024);
+                breadthSolution.totalTime = System.currentTimeMillis() - startTime;
+                
+                return breadthSolution;
+            }
+            else{
+                evaluateChildren(cur);
+                expandedNodes++;
+
+                if(cur.left != null)
+                    unexpandedNodes.add(cur.left);
+                if(cur.right != null)
+                    unexpandedNodes.add(cur.right);
+                if(cur.up != null)
+                    unexpandedNodes.add(cur.up);
+                if(cur.down != null)
+                    unexpandedNodes.add(cur.down);
+            }
+        }
+        return null;
+    }
+
+    // method that usis the first heuristic to get the solution. it calls getMissplacedTiles()
+    public static solutionData aStarH1(node root, String board){
+        ArrayList<node> unexpandedNodes = new ArrayList<node>();
+        unexpandedNodes.add(root);
+
+        solutionData breadthSolution = new solutionData();
+        int expandedNodes = 0;
+        long startTime = System.currentTimeMillis();
+
+        node cur = null;
+        while(expandedNodes < Integer.MAX_VALUE){
+            // get node with lowest f(n) = g(n) + h(n) result
+            int minVal = Integer.MAX_VALUE;
+            for (int i = 0; i < unexpandedNodes.size() ; i++) {
+                node tmp = unexpandedNodes.get(i);
+                if(getMissplacedTiles(tmp) + tmp.level < minVal){
+                    minVal = getMissplacedTiles(tmp) + tmp.level;
+                    cur = tmp;
+                }
+            }
+            unexpandedNodes.remove(cur);
+
+            if (getMissplacedTiles(cur) == 0){
+                breadthSolution.expandedNodes = expandedNodes;
+                breadthSolution.solutionNode = cur;
+                breadthSolution.startingBoard = board;
+                breadthSolution.path = getPath(cur);
+
+                Runtime runtime = Runtime.getRuntime();
+                breadthSolution.memoryUsed = (runtime.totalMemory() - runtime.freeMemory())/(1024);
+                breadthSolution.totalTime = System.currentTimeMillis() - startTime;
+                
+                return breadthSolution;
+            }
+            else{
+                evaluateChildren(cur);
+                expandedNodes++;
+
+                if(cur.left != null)
+                    unexpandedNodes.add(cur.left);
+                if(cur.right != null)
+                    unexpandedNodes.add(cur.right);
+                if(cur.up != null)
+                    unexpandedNodes.add(cur.up);
+                if(cur.down != null)
+                    unexpandedNodes.add(cur.down);
+            }
+        }
+        return null;
+    }
+
     // A method that uses breadth first search to find a solution
-    public static node breadthFind(node root){
-        ArrayList<String> savedStates = new ArrayList<String>();
+    public static solutionData breadthFind(node root, String board){
         LinkedList<node> queue = new LinkedList<node>();
         queue.add(root);
+        
+        solutionData breadthSolution = new solutionData();
+        int expandedNodes = 0;
+        long startTime = System.currentTimeMillis();
 
-        while(!queue.isEmpty()){
+        while(!queue.isEmpty() && expandedNodes <= Integer.MAX_VALUE){
             node cur = queue.removeFirst();
             String curState = makeStateID(cur);
 
-            if(goalTest(cur))
-                return cur;
-            else if( !savedStates.contains(curState) ){
-                savedStates.add(curState);
+            if(goalTest(cur)){
+                breadthSolution.expandedNodes = expandedNodes;
+                breadthSolution.solutionNode = cur;
+                breadthSolution.startingBoard = board;
+                breadthSolution.path = getPath(cur);
+
+                Runtime runtime = Runtime.getRuntime();
+                breadthSolution.memoryUsed = (runtime.totalMemory() - runtime.freeMemory())/(1024);
+                breadthSolution.totalTime = System.currentTimeMillis() - startTime;
+                
+                return breadthSolution;
+            }
+            else {
+                // expands node
                 evaluateChildren(cur);
+                expandedNodes++;
 
                 if(cur.left != null)
                     queue.add(cur.left);
@@ -90,16 +299,20 @@ public  class puzzleSolver {
                     queue.add(cur.down);
             }
         }
-        // should never happen unless puzzle is not valid
+        // should never happen unless puzzle is not valid or ran out of memory
         return null;
     }
 
     // A method that uses iterative deepening depth first search
-    public static node iterDepthFind(node root){
+    public static solutionData iterDepthFind(node root, String board){
         int depthLevel = 0;
+
+        solutionData breadthSolution = new solutionData();
+        int expandedNodes = 0;
+        long startTime = System.currentTimeMillis();
         
         while(depthLevel < Integer.MAX_VALUE){
-            ArrayList<String> savedStates = new ArrayList<String>();
+            // ArrayList<String> savedStates = new ArrayList<String>();
             LinkedList<node> stack = new LinkedList<node>();
             stack.add(root);
 
@@ -107,11 +320,22 @@ public  class puzzleSolver {
                 node cur = stack.removeLast();
                 String curState = makeStateID(cur);
 
-                if(goalTest(cur))
-                    return cur;
-                else if(!savedStates.contains(curState) && cur.level < depthLevel){
-                    savedStates.add(curState);
+                if(goalTest(cur)){
+                    breadthSolution.expandedNodes = expandedNodes;
+                    breadthSolution.solutionNode = cur;
+                    breadthSolution.startingBoard = board;
+                    breadthSolution.path = getPath(cur);
+
+                    Runtime runtime = Runtime.getRuntime();
+                    breadthSolution.memoryUsed = (runtime.totalMemory() - runtime.freeMemory())/(1024);
+                    breadthSolution.totalTime = System.currentTimeMillis() - startTime;
+                    
+                    return breadthSolution;
+                }
+                else if(cur.level < depthLevel){
+                    // savedStates.add(curState);
                     evaluateChildren(cur);
+                    expandedNodes++;
 
                     if(cur.left != null)
                         stack.add(cur.left);
@@ -125,7 +349,7 @@ public  class puzzleSolver {
             }
             depthLevel++;
         }
-        // should never happen unless puzzle is not valid
+        // should never happen unless puzzle is not valid or ran out of memory
         return null;
     }
 
@@ -143,7 +367,7 @@ public  class puzzleSolver {
     public static void evaluateChildren(node curNode){
         if(curNode.blankCol > 0){
             curNode.left = new node();
-            curNode.left.move = "Left";
+            curNode.left.move = "L";
             curNode.left.level = curNode.level + 1;
             curNode.left.blankCol = curNode.blankCol - 1;
             curNode.left.blankRow = curNode.blankRow;
@@ -152,7 +376,7 @@ public  class puzzleSolver {
         }
         if(curNode.blankCol < 3){
             curNode.right = new node();
-            curNode.right.move = "Right";
+            curNode.right.move = "R";
             curNode.right.level = curNode.level + 1;
             curNode.right.blankCol = curNode.blankCol + 1;
             curNode.right.blankRow = curNode.blankRow;
@@ -162,7 +386,7 @@ public  class puzzleSolver {
         }
         if(curNode.blankRow > 0){
             curNode.up = new node();
-            curNode.up.move = "Up";
+            curNode.up.move = "U";
             curNode.up.level = curNode.level + 1;
             curNode.up.blankCol = curNode.blankCol;
             curNode.up.blankRow = curNode.blankRow - 1;
@@ -172,7 +396,7 @@ public  class puzzleSolver {
         }
          if(curNode.blankRow < 3){
             curNode.down = new node();
-            curNode.down.move = "Down";
+            curNode.down.move = "D";
             curNode.down.level = curNode.level + 1;
             curNode.down.blankCol = curNode.blankCol;
             curNode.down.blankRow = curNode.blankRow + 1;
@@ -208,53 +432,81 @@ public  class puzzleSolver {
         return newState;
     }
 
+    // compare the goal state and cur state and return the manhattan sum of a the misplace tiles
+    public static int getDistanceSum(node curNode){
+        int manhatSum = 0;
+        for (int row = 0; row < 4 ; row++) {
+            for (int col = 0; col < 4 ; col++ ) {
+                int x;
+                int y;
+                int val = curNode.state[row][col];
+                
+                if(val >= 1 && val <= 4){
+                    y = 0;
+                    x = val - 1;
+                }
+                else if(val >= 5 && val <= 8){
+                    y = 1;
+                    x = val - 5;
+                }
+                else if(val >= 9 && val <= 12){
+                    y = 2;
+                    x = val - 9;
+                }
+                else if(val >= 13 && val <= 15){
+                    y = 3;
+                    x = val - 13;
+                }
+                else{
+                    y = 3;
+                    x = 3;
+                }
+
+                manhatSum = manhatSum + Math.abs(row - y) + Math.abs(col - x);
+            }
+        }
+        return manhatSum;
+    }
+
+    // compares the goal state and cur state and returns the number of missplace tiles
+    public static int getMissplacedTiles(node curNode){
+        int [][] goalState = {{1,2,3,4},{5,6,7,8},{9, 10,11,12},{13,14,15,0}};
+        int tileCounter = 0;
+        for (int row = 0; row<4; row++){
+            for (int col = 0; col < 4; col++){
+                if(goalState[row][col] != curNode.state[row][col])
+                    tileCounter++;
+            }
+        }
+        return tileCounter;
+    }
+
     // checks to see if the node has the correct state(goal)
     public static boolean goalTest(node curNode){
         int [][] goalState = {{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,0}};
         return Arrays.deepEquals(curNode.state, goalState);    
     }
 
-    // print the puzzle in a pretty way
-    public static void printPuzzle(node curNode){
-        if(curNode == null)
-            return;
-
-        System.out.println(curNode.move);
-        for(int i = 0; i < 4; i++){
-            for(int q: curNode.state[i])
-                System.out.printf("%3d  ",q);
-            System.out.println();
-        }
-        System.out.println();
-    }
-
-    // print the puzzle in a ugly way
-    public static void printPuzzleUgly(node curNode){
-        if(curNode == null)
-            return;
-
-        for(int i = 0; i < 4; i++){
-            for(int q: curNode.state[i])
-                System.out.printf("%1d ",q);
-        }
-        System.out.print("  " + curNode.move + "\n");
-    }
-
-    // traverses the tree backwards to print the solution
-    public static void printSolution(node solution, boolean ugly){
+    // returns a string that shows the path that needs to be taken to solve the puzzle
+    public static String getPath(node solution){
         LinkedList<node> solutionPath = new LinkedList<node>();
         node cur = solution;
+        String path = "";
         while(cur != null){
             solutionPath.addFirst(cur);
             cur = cur.parent;
         }
-
-        System.out.println("This is the solution:");
-
         while(!solutionPath.isEmpty()){
-            if(!ugly)
-                printPuzzle(solutionPath.removeFirst());
-                printPuzzleUgly(solutionPath.removeFirst());
+            node tmp = solutionPath.removeFirst();
+            if(tmp.move != "Start")
+                path = path + tmp.move;
         }
+        return path;
+    }
+
+    // helper method that simply prints the solution and information regarding the solution
+    public static void printSolutionData(solutionData solution){
+        System.out.println(solution.startingBoard + "  Moves:" + solution.path.length() + "  Steps:" + solution.path);
+        System.out.println("Memory: " + solution.memoryUsed +"kb   Time: "+ solution.totalTime + "ms   Expanded Nodes:" + solution.expandedNodes);
     }
 }
