@@ -34,17 +34,17 @@ Output:
 The program will then out put the solution for the four algorithms  
 *Ex:*  
 BFS:
-1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR
-Memory: 8624kb   Time: 42ms   Expanded Nodes:2642
+1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR  
+Memory: 8624kb   Time: 42ms   Expanded Nodes:2642  
 
-IDDFS:
-1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR
-Memory: 7981kb   Time: 23ms   Expanded Nodes:1489
+IDDFS:  
+1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR  
+Memory: 7981kb   Time: 23ms   Expanded Nodes:1489  
 
-A*h1:
-1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR
-Memory: 886kb   Time: 0ms   Expanded Nodes:7
+A*h1:  
+1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR  
+Memory: 886kb   Time: 0ms   Expanded Nodes:7  
 
-A*h2:
-1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR
+A*h2:  
+1 0 2 4 5 7 3 8 9 6 11 12 13 10 14 15   Moves:7  Steps:RDLDDRR  
 Memory: 886kb   Time: 0ms   Expanded Nodes:7
